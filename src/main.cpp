@@ -1,7 +1,8 @@
 // https://raytracing.github.io/books/RayTracingInOneWeekend.html
 
-#include <iostream>
 #include "vec3.h"
+#include "color.h"
+#include <iostream>
 
 int main()
 {
@@ -11,20 +12,15 @@ int main()
 
     // Render
     std::cout << "P3\n" << imagePlaneWidth << ' ' << imagePlaneHeight << "\n255\n";
-    
     for (int y = 0; y < imagePlaneHeight; y++)
     {
+        std::clog << "\rScanlines Left: " << (imagePlaneHeight - y) << ' ' << std::flush;
         for (int x = 0; x < imagePlaneWidth; x++)
         {
-            auto red = float(x) / (imagePlaneWidth - 1);
-            auto green = float(y) / (imagePlaneHeight - 1);
-            auto blue = 0.0f;
-
-            int iRed = int(255.999 * red);
-            int iGreen = int(255.999 * green);
-            int iBlue = int(255.999 * blue);
-
-            std::cout << iRed << ' ' << iGreen << ' ' << iBlue << '\n';
+            auto pixelColor = color(float(x)/(imagePlaneWidth-1), float(y)/(imagePlaneHeight-1), 0);
+            writeColor(std::cout, pixelColor);
         };
     };
+
+    std::clog << "\rDone.                 \n";
 }
