@@ -1,6 +1,7 @@
 // https://raytracing.github.io/books/RayTracingInOneWeekend.html
 
 #include <iostream>
+#include "vec3.h"
 
 int main()
 {
