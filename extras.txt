@@ -1,0 +1,12 @@
+once this course is finshed - https://raytracing.github.io/books/RayTracingInOneWeekend.html
+
+Extras Maybe?:
+Try adding different image format supports. BMP or OpenEXR.
+    Have to deal with ColorSpace or Keep it all in linear ColorSpace?
+Spilt the camera into it's own file / class.
+    Support importing Cameras. Maybe FBX or alembic. Not USD.
+    Support aninmated Cameras?
+Create an Scene Class that whole data and context of the renderable scene.
+Import 3D Models. Could use https://github.com/assimp/assimp.
+    Would need to add support for textures, uv's and importing images.
+Warp an UI around this? Could use Qt for this.
