@@ -8,7 +8,7 @@ class camera
     public:
         double aspectRatio = 1.0;
         int imagePlaneWidth = 100;
-        int samplesPerPixel = 1; //TODO increasing this value bricks the renders
+        int samplesPerPixel = 10; //TODO increasing this value bricks the renders
 
         void render(const hittable& world)
         {
@@ -35,7 +35,7 @@ class camera
         }
     private:
         int imagePlaneHeight;
-        int pixelSampleScale;
+        double pixelSampleScale;
         point3 cameraCenter;
         point3 pixel_00_loc;
         vec3 pixelDeltaU;
