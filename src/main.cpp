@@ -1,26 +1,22 @@
 // https://raytracing.github.io/books/RayTracingInOneWeekend.html
 
-#include "vec3.h"
-#include "color.h"
-#include <iostream>
+#include "rtweekend.h"
+
+#include "camera.h"
+#include "hittable.h"
+#include "hittable_list.h"
+#include "sphere.h"
 
 int main()
 {
-    // Image
-    int imagePlaneHeight = 256;
-    int imagePlaneWidth = 256;
+    hittable_list world;
+    world.add(make_shared<sphere>(point3(0,0,-1), 0.5));
+    world.add(make_shared<sphere>(point3(0,-100.5, -1), 100));
 
-    // Render
-    std::cout << "P3\n" << imagePlaneWidth << ' ' << imagePlaneHeight << "\n255\n";
-    for (int y = 0; y < imagePlaneHeight; y++)
-    {
-        std::clog << "\rScanlines Left: " << (imagePlaneHeight - y) << ' ' << std::flush;
-        for (int x = 0; x < imagePlaneWidth; x++)
-        {
-            auto pixelColor = color(float(x)/(imagePlaneWidth-1), float(y)/(imagePlaneHeight-1), 0);
-            writeColor(std::cout, pixelColor);
-        };
-    };
+    camera cam;
+    cam.aspectRatio = 16.0 / 9.0;
+    cam.imagePlaneWidth = 400;
+    //cam.samplesPerPixel = 100;
 
-    std::clog << "\rDone.                 \n";
+    cam.render(world);
 }

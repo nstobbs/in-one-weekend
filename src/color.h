@@ -1,9 +1,10 @@
 #ifndef COLOR_H
 #define COLOR_H
 
-#include "vec3.h"
+#include "rtweekend.h"
 
-#include <iostream>
+#include "interval.h"
+#include "vec3.h"
 
 using color = vec3;
 
@@ -13,9 +14,10 @@ void writeColor(std::ostream& out, const color& pixelColor)
     auto green = pixelColor.y();
     auto blue = pixelColor.z();
 
-    int redByte = int(255.999 * red);
-    int greenByte = int(255.999 * green);
-    int blueByte = int(255.999 * blue);
+    static const interval intensity(0.000, 0.999);
+    int redByte = int(256 * intensity.clamp(red));
+    int greenByte = int(256 * intensity.clamp(green));
+    int blueByte = int(256 * intensity.clamp(blue));
 
     out << redByte << ' ' << greenByte << ' ' << blueByte << '\n';
 }
