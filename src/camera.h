@@ -8,7 +8,8 @@ class camera
     public:
         double aspectRatio = 1.0;
         int imagePlaneWidth = 100;
-        int samplesPerPixel = 10; //TODO increasing this value bricks the renders
+        int samplesPerPixel = 10;
+        int maxDepth = 10;
 
         void render(const hittable& world)
         {
@@ -25,7 +26,7 @@ class camera
                     for (int sampleID = 0; sampleID < samplesPerPixel; sampleID++)
                     {
                         ray r = getRay(x, y);
-                        pixelColor += rayColor(r, world);
+                        pixelColor += rayColor(r, maxDepth, world);
                     }
                     writeColor(std::cout, pixelSampleScale * pixelColor);
                 };
@@ -80,12 +81,17 @@ class camera
             return vec3(randomDouble() - 0.5, randomDouble() - 0.5, 0);
         }
 
-        color rayColor(const ray& r, const hittable& world)
+        color rayColor(const ray& r, int maxDepth, const hittable& world)
         {
+            if (maxDepth <= 0)
+            {
+                return color(0,0,0);
+            }
             hitRecord rec;
             if(world.hit(r, interval(0, infinity), rec))
             {
-                return 0.5 * (rec.normal + color(1,1,1));
+                vec3 direction = randomOnHemisphere(rec.normal);
+                return 0.5 * rayColor(ray(rec.p, direction), maxDepth-1,world);
             }
 
             vec3 unitDirection = unitVector(r.direction());

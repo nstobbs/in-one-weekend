@@ -15,8 +15,9 @@ int main()
 
     camera cam;
     cam.aspectRatio = 16.0 / 9.0;
-    cam.imagePlaneWidth = 1920;
-    cam.samplesPerPixel = 100;
+    cam.imagePlaneWidth = 480;
+    cam.samplesPerPixel = 200;
+    cam.maxDepth = 50;
 
     cam.render(world);
 }
