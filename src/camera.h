@@ -1,6 +1,10 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+// openEXR
+#include <ImfRgbaFile.h>
+#include <ImfArray.h>
+
 #include "hittable.h"
 
 class camera
@@ -15,23 +19,33 @@ class camera
         {
             initialize();
 
-            std::cout << "P3\n" << imagePlaneWidth << ' ' << imagePlaneHeight << "\n255\n";
+            //std::cout << "P3\n" << imagePlaneWidth << ' ' << imagePlaneHeight << "\n255\n";
+            Imf::Array2D<Imf::Rgba> frame(imagePlaneWidth, imagePlaneHeight);
+            Imf::Array2D<Imf::Rgba> testFrame(imagePlaneWidth, imagePlaneHeight);
 
             for (int y = 0; y < imagePlaneHeight; y++)
             {
                 std::clog << "\rScanlines Left: " << (imagePlaneHeight - y) << ' ' << std::flush;
                 for (int x = 0; x < imagePlaneWidth; x++)
                 {
+                    //std::cout << "On Pixel:" << x << ' ' << y << std::endl;
                     color pixelColor (0,0,0);
                     for (int sampleID = 0; sampleID < samplesPerPixel; sampleID++)
                     {
                         ray r = getRay(x, y);
                         pixelColor += rayColor(r, maxDepth, world);
                     }
-                    writeColor(std::cout, pixelSampleScale * pixelColor);
+                    auto finalPixel = pixelSampleScale * pixelColor;
+                    //std::cout << "Writing pixel to pos: " << x << ' ' << y << std::endl;
+                    frame[x][y] = Imf::Rgba(half(finalPixel.x()), half(finalPixel.y()), half(finalPixel.z()), 1.0); 
+                    testFrame[x][y] = Imf::Rgba(x / (imagePlaneWidth-1.0f), y / (imagePlaneHeight-1.0f), 0.0);
+                    //std::clog << "testFrame: " << testFrame.r() << 
+                    //writeColor(std::cout, finalPixel);
                 };
             };
 
+            writeToOpenEXR(frame, imagePlaneWidth, imagePlaneHeight, "output.exr");
+            writeToOpenEXR(testFrame, imagePlaneWidth, imagePlaneHeight, "test.exr");
             std::clog << "\rDone.                 \n";
         }
     private:
@@ -46,6 +60,10 @@ class camera
         {
             imagePlaneHeight = int(imagePlaneWidth / aspectRatio);
             imagePlaneHeight = (imagePlaneHeight < 1) ? 1 : imagePlaneHeight;
+
+            std::cout << "Height: " << imagePlaneHeight<< std::endl;
+            std::cout << "Width: " << imagePlaneWidth << std::endl;
+            std::cout << "aspectRatio: " << aspectRatio << std::endl;
 
             pixelSampleScale = 1.0 / samplesPerPixel;
 
@@ -90,7 +108,7 @@ class camera
             hitRecord rec;
             if(world.hit(r, interval(0, infinity), rec))
             {
-                vec3 direction = randomOnHemisphere(rec.normal);
+                vec3 direction = rec.normal + randomOnHemisphere(rec.normal);
                 return 0.5 * rayColor(ray(rec.p, direction), maxDepth-1,world);
             }
 

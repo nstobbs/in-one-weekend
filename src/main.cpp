@@ -14,9 +14,9 @@ int main()
     world.add(make_shared<sphere>(point3(0,-100.5, -1), 100));
 
     camera cam;
-    cam.aspectRatio = 16.0 / 9.0;
-    cam.imagePlaneWidth = 480;
-    cam.samplesPerPixel = 200;
+    cam.aspectRatio = 16.0 / 16.0;
+    cam.imagePlaneWidth = 1000;
+    cam.samplesPerPixel = 100;
     cam.maxDepth = 50;
 
     cam.render(world);
