@@ -19,5 +19,7 @@ int main()
     cam.samplesPerPixel = 100;
     cam.maxDepth = 50;
 
-    cam.render(world);
+    //cam.render(world);
+    std::cout << "Start parallelRender Func..." << std::endl;
+    cam.parallelRender(world);
 }

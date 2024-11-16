@@ -3,6 +3,7 @@ set(CMAKE_CXX_STANDARD 17)
 project(inOneWeekend)
 
 find_package(OpenEXR REQUIRED)
+find_package(TBB REQUIRED)
 
 add_executable(inOneWeekend src/main.cpp
                 src/vec3.h
@@ -15,3 +16,4 @@ add_executable(inOneWeekend src/main.cpp
                 src/camera.h )
 
 target_link_libraries(inOneWeekend OpenEXR::OpenEXR)
+target_link_libraries(inOneWeekend TBB::tbb)

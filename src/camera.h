@@ -5,6 +5,9 @@
 #include <ImfRgbaFile.h>
 #include <ImfArray.h>
 
+// OneTBB
+#include <tbb/parallel_for.h>
+
 #include "hittable.h"
 
 class camera
@@ -14,6 +17,22 @@ class camera
         int imagePlaneWidth = 100;
         int samplesPerPixel = 10;
         int maxDepth = 10;
+
+        void parallelRender(const hittable& world)
+        {
+            std::cout << "Starting..." << std::endl;
+            initialize();
+            Imf::Array2D<Imf::Rgba> frame(imagePlaneWidth, imagePlaneHeight);
+
+            tbb::parallel_for(0, imagePlaneHeight, [&](int y){
+                tbb::parallel_for(0, imagePlaneWidth, [&](int x){
+                    calPixelColor(x, y, world, frame);
+                });
+            });
+
+            std::cout << "Writing Out..." << std::endl;
+            writeToOpenEXR(frame, imagePlaneWidth, imagePlaneHeight, "output.exr");
+        };
 
         void render(const hittable& world)
         {
@@ -115,6 +134,18 @@ class camera
             vec3 unitDirection = unitVector(r.direction());
             auto a = 0.5*(unitDirection.y() + 1.0);
             return (1.0-a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0);
+        };
+
+        void calPixelColor(int x, int y, const hittable& world, Imf::Array2D<Imf::Rgba>& frame)
+        {
+            color pixelColor (0,0,0);
+            for (int sampleID = 0; sampleID < samplesPerPixel; sampleID++)
+            {
+                ray r = getRay(x, y);
+                pixelColor += rayColor(r, maxDepth, world);
+            }
+            auto finalPixel = pixelSampleScale * pixelColor;
+            frame[y][x] = Imf::Rgba(half(finalPixel.x()), half(finalPixel.y()), half(finalPixel.z()), 0.0);
         };
 };
 
