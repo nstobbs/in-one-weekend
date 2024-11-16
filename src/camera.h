@@ -5,10 +5,11 @@
 #include <ImfRgbaFile.h>
 #include <ImfArray.h>
 
-// OneTBB
+// TBB
 #include <tbb/parallel_for.h>
 
 #include "hittable.h"
+#include "material.h"
 
 class camera
 {
@@ -17,54 +18,48 @@ class camera
         int imagePlaneWidth = 100;
         int samplesPerPixel = 10;
         int maxDepth = 10;
+        Imf::Array2D<Imf::Rgba> frame;
+        Imf::Array2D<Imf::Rgba> debugFrame;
 
         void parallelRender(const hittable& world)
         {
-            std::cout << "Starting..." << std::endl;
             initialize();
+            
             Imf::Array2D<Imf::Rgba> frame(imagePlaneWidth, imagePlaneHeight);
-
+            Imf::Array2D<Imf::Rgba> debugFrame(imagePlaneWidth, imagePlaneHeight);
+            
+            int finishedRows = 0;
             tbb::parallel_for(0, imagePlaneHeight, [&](int y){
+                finishedRows++;
+                std::clog << "Rows Left: " << (imagePlaneHeight - finishedRows) << ' ' << std::endl << std::flush;
                 tbb::parallel_for(0, imagePlaneWidth, [&](int x){
-                    calPixelColor(x, y, world, frame);
+                    calPixelColor(x, y, world, frame, debugFrame);
                 });
             });
 
-            std::cout << "Writing Out..." << std::endl;
             writeToOpenEXR(frame, imagePlaneWidth, imagePlaneHeight, "output.exr");
+            writeToOpenEXR(debugFrame, imagePlaneWidth, imagePlaneHeight, "test.exr");
+            std::clog << "\rDone.                 \n";
         };
 
         void render(const hittable& world)
         {
             initialize();
-
             //std::cout << "P3\n" << imagePlaneWidth << ' ' << imagePlaneHeight << "\n255\n";
             Imf::Array2D<Imf::Rgba> frame(imagePlaneWidth, imagePlaneHeight);
-            Imf::Array2D<Imf::Rgba> testFrame(imagePlaneWidth, imagePlaneHeight);
+            Imf::Array2D<Imf::Rgba> debugFrame(imagePlaneWidth, imagePlaneHeight);
 
             for (int y = 0; y < imagePlaneHeight; y++)
             {
                 std::clog << "\rScanlines Left: " << (imagePlaneHeight - y) << ' ' << std::flush;
                 for (int x = 0; x < imagePlaneWidth; x++)
                 {
-                    //std::cout << "On Pixel:" << x << ' ' << y << std::endl;
-                    color pixelColor (0,0,0);
-                    for (int sampleID = 0; sampleID < samplesPerPixel; sampleID++)
-                    {
-                        ray r = getRay(x, y);
-                        pixelColor += rayColor(r, maxDepth, world);
-                    }
-                    auto finalPixel = pixelSampleScale * pixelColor;
-                    //std::cout << "Writing pixel to pos: " << x << ' ' << y << std::endl;
-                    frame[x][y] = Imf::Rgba(half(finalPixel.x()), half(finalPixel.y()), half(finalPixel.z()), 1.0); 
-                    testFrame[x][y] = Imf::Rgba(x / (imagePlaneWidth-1.0f), y / (imagePlaneHeight-1.0f), 0.0);
-                    //std::clog << "testFrame: " << testFrame.r() << 
-                    //writeColor(std::cout, finalPixel);
+                    calPixelColor(x, y, world, frame, debugFrame);
                 };
             };
 
             writeToOpenEXR(frame, imagePlaneWidth, imagePlaneHeight, "output.exr");
-            writeToOpenEXR(testFrame, imagePlaneWidth, imagePlaneHeight, "test.exr");
+            writeToOpenEXR(debugFrame, imagePlaneWidth, imagePlaneHeight, "test.exr");
             std::clog << "\rDone.                 \n";
         }
     private:
@@ -79,6 +74,8 @@ class camera
         {
             imagePlaneHeight = int(imagePlaneWidth / aspectRatio);
             imagePlaneHeight = (imagePlaneHeight < 1) ? 1 : imagePlaneHeight;
+            Imf::Array2D<Imf::Rgba> frame(imagePlaneWidth, imagePlaneHeight);
+            Imf::Array2D<Imf::Rgba> debugFrame(imagePlaneWidth, imagePlaneHeight);
 
             std::cout << "Height: " << imagePlaneHeight<< std::endl;
             std::cout << "Width: " << imagePlaneWidth << std::endl;
@@ -127,8 +124,13 @@ class camera
             hitRecord rec;
             if(world.hit(r, interval(0, infinity), rec))
             {
-                vec3 direction = rec.normal + randomOnHemisphere(rec.normal);
-                return 0.5 * rayColor(ray(rec.p, direction), maxDepth-1,world);
+                ray scattered;
+                color attenuation;
+                if(rec.mat->scatter(r, rec, attenuation, scattered))
+                {
+                    return attenuation * rayColor(scattered, maxDepth - 1, world);
+                }
+                return color(0,0,0);
             }
 
             vec3 unitDirection = unitVector(r.direction());
@@ -136,7 +138,7 @@ class camera
             return (1.0-a)*color(1.0, 1.0, 1.0) + a*color(0.5, 0.7, 1.0);
         };
 
-        void calPixelColor(int x, int y, const hittable& world, Imf::Array2D<Imf::Rgba>& frame)
+        void calPixelColor(int x, int y, const hittable& world, Imf::Array2D<Imf::Rgba>& frame, Imf::Array2D<Imf::Rgba>& debugFrame)
         {
             color pixelColor (0,0,0);
             for (int sampleID = 0; sampleID < samplesPerPixel; sampleID++)
@@ -146,6 +148,7 @@ class camera
             }
             auto finalPixel = pixelSampleScale * pixelColor;
             frame[y][x] = Imf::Rgba(half(finalPixel.x()), half(finalPixel.y()), half(finalPixel.z()), 0.0);
+            debugFrame[y][x] = Imf::Rgba(x / (imagePlaneWidth-1.0f), y / (imagePlaneHeight-1.0f), 0.0);
         };
 };
 

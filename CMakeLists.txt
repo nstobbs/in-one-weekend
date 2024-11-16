@@ -13,7 +13,8 @@ add_executable(inOneWeekend src/main.cpp
                 src/rtweekend.h
                 src/sphere.h
                 src/interval.h
-                src/camera.h )
+                src/camera.h
+                src/material.h )
 
 target_link_libraries(inOneWeekend OpenEXR::OpenEXR)
 target_link_libraries(inOneWeekend TBB::tbb)
