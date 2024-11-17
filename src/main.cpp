@@ -14,31 +14,59 @@ int main()
 {
     hittable_list world;
 
-    auto materialGround = make_shared<diffuse>(color(0.8, 0.8, 0.0));
-    auto materialCenter = make_shared<diffuse>(color(0.1, 0.2, 0.5));
-    auto materialLeft = make_shared<glass>(1.5);
-    auto materialBubble = make_shared<glass>(1.00 / 1.50);
-    auto materialRight = make_shared<metal>(color(0.8, 0.6, 0.2), 1.0);
+    auto groundMaterial = make_shared<diffuse>(color(0.5,0.5,0.5));
+    world.add(make_shared<sphere>(point3(0, -1000, 0), 1000, groundMaterial));
 
-    world.add(make_shared<sphere>(point3(0,-100.5, -1), 100, materialGround));
-    world.add(make_shared<sphere>(point3(0,0,-1.2), 0.5, materialCenter));
-    world.add(make_shared<sphere>(point3(-1.0,0,-1.0), 0.5, materialLeft));
-    world.add(make_shared<sphere>(point3(-1.0, 0.0, -1.0), 0.4, materialBubble));
-    world.add(make_shared<sphere>(point3(1.0,0,-1.0), 0.5, materialRight));
+    for (int a = -11; a < 11; a++)
+    {
+        for (int b = -11; b < 11; b++)
+        {
+            auto chooseMat = randomDouble();
+            point3 center(a + 0.9*randomDouble(), 0.2, b + 0.9*randomDouble());
+            if ((center - point3(4, 0.2, 0)).length() > 0.9)
+            {
+                shared_ptr<material> sphereMaterial;
+
+                if (chooseMat < 0.8)
+                {
+                    auto albedo = color::random() * color::random();
+                    sphereMaterial = make_shared<diffuse>(albedo);
+                    world.add(make_shared<sphere>(center, 0.2, sphereMaterial));
+                } else if (chooseMat < 0.95){
+                    auto albedo = color::random();
+                    auto fuzz = randomDouble(0, 0.5);
+                    sphereMaterial = make_shared<metal>(albedo, fuzz);
+                    world.add(make_shared<sphere>(center, 0.2, sphereMaterial));
+                } else {
+                    sphereMaterial = make_shared<glass>(1.5);
+                    world.add(make_shared<sphere>(center, 0.2, sphereMaterial));
+                }
+            }
+        }
+    }
+
+    auto material1 = make_shared<glass>(1.5);
+    world.add(make_shared<sphere>(point3(0,1,0), 1.0, material1));
+
+    auto material2 = make_shared<diffuse>(color(0.4, 0.2, 0.1));
+    world.add(make_shared<sphere>(point3(-4,1,0), 1.0, material2));
+
+    auto material3 = make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
+    world.add(make_shared<sphere>(point3(4,1,0), 1.0, material3));
 
     camera cam;
-    cam.aspectRatio = 16.0 / 16.0;
+    cam.aspectRatio = 16.0 / 9.0;
     cam.imagePlaneWidth = 500;
-    cam.samplesPerPixel = 500;
-    cam.maxDepth = 250;
+    cam.samplesPerPixel = 100;
+    cam.maxDepth = 10;
     
     cam.viewFov = 20;
-    cam.lookFrom = point3(-2, 2, 1);
-    cam.lookAt = point3(0,0, -1);
+    cam.lookFrom = point3(13, 2, 3);
+    cam.lookAt = point3(0,0,0);
     cam.vUp = vec3(0,1,0);
 
-    cam.defocusAngle = 10.0;
-    cam.focusDist = 3.4;
+    cam.defocusAngle = 0.6;
+    cam.focusDist = 10.0;
 
     if (USE_THREADING)
     {

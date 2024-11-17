@@ -34,18 +34,21 @@ class camera
         {
             initialize();
             
-            Imf::Array2D<Imf::Rgba> frame(imagePlaneWidth, imagePlaneHeight);
-            Imf::Array2D<Imf::Rgba> debugFrame(imagePlaneWidth, imagePlaneHeight);
+            Imf::Array2D<Imf::Rgba> frame(imagePlaneHeight, imagePlaneWidth);
+            Imf::Array2D<Imf::Rgba> debugFrame(imagePlaneHeight, imagePlaneWidth);
             
             int finishedRows = 0;
             tbb::parallel_for(0, imagePlaneHeight, [&](int y){
                 finishedRows++;
-                std::clog << "Rows Left: " << (imagePlaneHeight - finishedRows) << ' ' << std::endl << std::flush;
+                std::clog << "Rows Left: " << (imagePlaneHeight - finishedRows) << std::endl;
+                std::clog.flush();
                 tbb::parallel_for(0, imagePlaneWidth, [&](int x){
                     calPixelColor(x, y, world, frame, debugFrame);
                 });
             });
 
+            std::clog << "Writing to frame with width: " << frame.width() << std::endl;
+            std::clog << "Writing to frame with height: " << frame.height() << std::endl;
             writeToOpenEXR(frame, imagePlaneWidth, imagePlaneHeight, "output.exr");
             writeToOpenEXR(debugFrame, imagePlaneWidth, imagePlaneHeight, "test.exr");
             std::clog << "\rDone.                 \n";
