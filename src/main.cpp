@@ -56,9 +56,9 @@ int main()
 
     camera cam;
     cam.aspectRatio = 16.0 / 9.0;
-    cam.imagePlaneWidth = 500;
-    cam.samplesPerPixel = 100;
-    cam.maxDepth = 10;
+    cam.imagePlaneWidth = 1200;
+    cam.samplesPerPixel = 500;
+    cam.maxDepth = 50;
     
     cam.viewFov = 20;
     cam.lookFrom = point3(13, 2, 3);
